@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>2019/07/27 08:46:46.538.pas,C:\Users\Lemarq\Documents\RAD Studio\Projects\Unit5.pas=C:\Sistemas\DistDFE\principal.pas</Transaction>
+    <Transaction>2019/07/27 08:46:46.538.dfm,C:\Users\Lemarq\Documents\RAD Studio\Projects\Unit5.dfm=C:\Sistemas\DistDFE\principal.dfm</Transaction>
+    <Transaction>2019/07/27 08:46:58.788.dproj,C:\Users\Lemarq\Documents\RAD Studio\Projects\Project6.dproj=C:\Sistemas\DistDFE\distdfe.dproj</Transaction>
+    <Transaction>2019/07/27 09:27:41.169.pas,C:\Sistemas\DistDFE\Unit1.pas=C:\Sistemas\DistDFE\c_config.pas</Transaction>
+    <Transaction>2019/07/27 09:27:41.169.dfm,C:\Sistemas\DistDFE\Unit1.dfm=C:\Sistemas\DistDFE\c_config.dfm</Transaction>
+  </Transactions>
+</BorlandProject>
