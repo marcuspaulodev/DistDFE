@@ -1,0 +1,170 @@
+unit c_config;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, StdCtrls, Mask, RxToolEdit, Buttons, framebr, ACBrBase, ACBrDFe,
+  ACBrNFe,acbrdfessl, IniFiles, funcoes, DB, ZAbstractRODataset, ZDataset;
+
+type
+  Tfrconfig = class(TForm)
+    Conexão: TGroupBox;
+    Edit1: TEdit;
+    HOST: TLabel;
+    Edit2: TEdit;
+    Label1: TLabel;
+    Edit3: TEdit;
+    Label2: TLabel;
+    Edit4: TEdit;
+    Label3: TLabel;
+    Button1: TButton;
+    GroupBox1: TGroupBox;
+    Edit5: TEdit;
+    Label4: TLabel;
+    SpeedButton1: TSpeedButton;
+    Edit6: TEdit;
+    Label5: TLabel;
+    DateEdit1: TDateEdit;
+    Label6: TLabel;
+    GroupBox2: TGroupBox;
+    ComboBox1: TComboBox;
+    Label7: TLabel;
+    Edit7: TEdit;
+    Label8: TLabel;
+    Label9: TLabel;
+    DirectoryEdit1: TDirectoryEdit;
+    frameOKCancel1: TframeOKCancel;
+    ACBrNFe1: TACBrNFe;
+    Label10: TLabel;
+    Edit8: TEdit;
+    qr1: TZReadOnlyQuery;
+    procedure SpeedButton1Click(Sender: TObject);
+    procedure frameOKCancel1BitBtn1Click(Sender: TObject);
+    procedure FormShow(Sender: TObject);
+    procedure Button1Click(Sender: TObject);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+    arquivoini : Tinifile;
+    ininame : string;
+
+    procedure carregarConfiguracoes(inifilename:string; inifile:TIniFile);
+    procedure limpaCampos;
+    procedure habilitaCampos;
+  end;
+
+var
+  frconfig: Tfrconfig;
+
+implementation
+
+{$R *.dfm}
+
+ uses principal;
+
+procedure Tfrconfig.Button1Click(Sender: TObject);
+begin
+  frPrincipal.db0.HostName := edit1.Text;
+  frprincipal.db0.User     := edit2.Text;
+  frprincipal.db0.Password := edit3.Text;
+  frprincipal.db0.Database := edit4.Text;
+
+  try
+    frprincipal.db0.Connected := true;
+
+  except
+    on e:exception do begin
+      raise Exception.Create(e.Message);
+    end;
+  end;
+end;
+
+procedure Tfrconfig.carregarConfiguracoes(inifilename: string;
+  inifile: TIniFile);
+begin
+  inifile := TIniFile.Create(inifilename);
+
+  if not FileExists(inifilename) then begin
+    FileCreate(inifilename);
+    limpaCampos;
+  end
+  else begin
+
+     if (inifile.SectionExists('mysql')) then begin
+
+        edit1.Text := inifile.ReadString('mysql','host','localhost');
+        edit2.Text := inifile.ReadString('mysql','user','root');
+        edit3.Text := inifile.ReadString('mysql','password','');
+        edit4.Text := inifile.ReadString('mysql','database','SAS');
+
+     end;
+
+  end;
+
+  inifile.Free;
+
+end;
+
+procedure Tfrconfig.FormShow(Sender: TObject);
+begin
+  if ComboBox1.Text = '' then
+    combobox1.Items.AddStrings(frprincipal.estados);
+end;
+
+procedure Tfrconfig.frameOKCancel1BitBtn1Click(Sender: TObject);
+begin
+  ininame := ChangeFileExt(paramstr(0), '.INI');
+
+  arquivoini := TIniFile.Create(ininame);
+
+  arquivoini.WriteString('mysql','host',edit1.Text);
+  arquivoini.WriteString('mysql','user',edit2.Text);
+  arquivoini.WriteString('mysql','password',edit3.Text);
+  arquivoini.WriteString('mysql','database',edit4.Text);
+
+  arquivoini.WriteString('certificado','nrserie',edit5.Text);
+  arquivoini.WriteString('certificado','senha',edit6.Text);
+  arquivoini.WriteString('certificado','vencimento',InverteData(dateedit1.Date));
+
+  arquivoini.WriteString('autor','uf',ComboBox1.Text);
+  arquivoini.WriteString('autor','cnpj',edit7.Text);
+  arquivoini.WriteString('autor','path',DirectoryEdit1.Text);
+  arquivoini.WriteString('autor','ultnsu',edit8.Text);
+
+  arquivoini.Free;
+end;
+
+procedure Tfrconfig.habilitaCampos;
+begin
+  SpeedButton1.Enabled   := true;
+  Edit6.Enabled          := true;
+  ComboBox1.Enabled      := true;
+  DirectoryEdit1.Enabled := true;
+  edit8.Enabled          := true;
+end;
+
+procedure Tfrconfig.limpaCampos;
+begin
+  edit1.Clear;
+  edit2.Clear;
+  edit3.Clear;
+  edit4.Clear;
+  edit5.Clear;
+  edit6.Clear;
+  DateEdit1.Date := 0;
+  ComboBox1.Text := '';
+  edit7.Clear;
+  DirectoryEdit1.Clear;
+end;
+
+procedure Tfrconfig.SpeedButton1Click(Sender: TObject);
+begin
+  ACBrNFe1.Configuracoes.Geral.SSLLib := Tssllib(4);
+  edit5.Text := ACBrNFe1.SSL.SelecionarCertificado;
+  DateEdit1.Date := ACBrNFe1.SSL.DadosCertificado.DataVenc;
+  edit7.Text := ACBrNFe1.SSL.DadosCertificado.CNPJ;
+end;
+
+end.

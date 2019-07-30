@@ -44,6 +44,11 @@
 			<DCCReference Include="c_config.pas">
 				<Form>frconfig</Form>
 			</DCCReference>
+			<DCCReference Include="framebr.pas">
+				<Form>frameOKCancel</Form>
+				<DesignClass>TFrame</DesignClass>
+			</DCCReference>
+			<DCCReference Include="funcoes.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

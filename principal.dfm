@@ -2,9 +2,9 @@ object frPrincipal: TfrPrincipal
   Left = 0
   Top = 0
   BorderStyle = bsDialog
-  Caption = 'Distribui'#231#227'o de DFe'
-  ClientHeight = 211
-  ClientWidth = 457
+  Caption = 'Monitor DFe'
+  ClientHeight = 339
+  ClientWidth = 909
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -13,17 +13,94 @@ object frPrincipal: TfrPrincipal
   Font.Style = []
   OldCreateOrder = False
   Position = poDesktopCenter
+  OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
+  object DBGrid1: TDBGrid
+    Left = 0
+    Top = 0
+    Width = 908
+    Height = 288
+    Align = alCustom
+    DataSource = DataSource1
+    Options = [dgTitles, dgIndicator, dgColLines, dgRowLines, dgTabs, dgRowSelect, dgTitleClick, dgTitleHotTrack]
+    TabOrder = 0
+    TitleFont.Charset = DEFAULT_CHARSET
+    TitleFont.Color = clWindowText
+    TitleFont.Height = -11
+    TitleFont.Name = 'Tahoma'
+    TitleFont.Style = []
+    Columns = <
+      item
+        Expanded = False
+        FieldName = 'nr_doc'
+        Title.Caption = 'Num. NF'
+        Width = 65
+        Visible = True
+      end
+      item
+        Alignment = taCenter
+        Expanded = False
+        FieldName = 'dt_emis'
+        Title.Alignment = taCenter
+        Title.Caption = 'Emiss'#227'o'
+        Width = 65
+        Visible = True
+      end
+      item
+        Expanded = False
+        FieldName = 'nm_forn'
+        Title.Caption = 'Fornecedor'
+        Width = 220
+        Visible = True
+      end
+      item
+        Expanded = False
+        FieldName = 'vl_nf'
+        Title.Caption = 'Total NF'
+        Visible = True
+      end
+      item
+        Expanded = False
+        FieldName = 'nr_chave'
+        Title.Caption = 'Chave'
+        Visible = True
+      end
+      item
+        Expanded = False
+        FieldName = 'nr_protocolo'
+        Title.Caption = 'Protocolo'
+        Width = 95
+        Visible = True
+      end
+      item
+        Expanded = False
+        FieldName = 'nr_nsu'
+        Title.Caption = 'NSU'
+        Visible = True
+      end>
+  end
+  object Button1: TButton
+    Left = 8
+    Top = 300
+    Width = 113
+    Height = 25
+    Caption = 'Confirmar Opera'#231#227'o'
+    TabOrder = 1
+    OnClick = Button1Click
+  end
   object TrayIcon1: TTrayIcon
+    AnimateInterval = 5000
+    Hint = 'Monitor DFe'
+    BalloonTimeout = 5000
     PopupMenu = PopupMenu1
     Visible = True
     OnClick = TrayIcon1Click
-    Left = 408
+    Left = 616
     Top = 64
   end
   object PopupMenu1: TPopupMenu
-    Left = 408
+    Left = 616
     Top = 8
     object Abrir1: TMenuItem
       Caption = 'Abrir'
@@ -40,5 +117,64 @@ object frPrincipal: TfrPrincipal
       Caption = 'Sair'
       OnClick = Sair1Click
     end
+  end
+  object db0: TZConnection
+    ControlsCodePage = cCP_UTF16
+    Port = 3306
+    Protocol = 'mysql'
+    Left = 624
+    Top = 120
+  end
+  object qr1: TZReadOnlyQuery
+    Connection = db0
+    Params = <>
+    Left = 616
+    Top = 176
+  end
+  object z1: TZSQLProcessor
+    Params = <>
+    Connection = db0
+    Delimiter = ';'
+    Left = 616
+    Top = 240
+  end
+  object DataSource1: TDataSource
+    DataSet = qrnf
+    OnDataChange = DataSource1DataChange
+    Left = 552
+    Top = 16
+  end
+  object ACBrNFe1: TACBrNFe
+    Configuracoes.Geral.SSLLib = libCapicom
+    Configuracoes.Geral.SSLCryptLib = cryCapicom
+    Configuracoes.Geral.SSLHttpLib = httpWinINet
+    Configuracoes.Geral.SSLXmlSignLib = xsMsXmlCapicom
+    Configuracoes.Geral.FormatoAlerta = 'TAG:%TAGNIVEL% ID:%ID%/%TAG%(%DESCRICAO%) - %MSG%.'
+    Configuracoes.Geral.VersaoQRCode = veqr000
+    Configuracoes.Arquivos.OrdenacaoPath = <>
+    Configuracoes.WebServices.UF = 'SP'
+    Configuracoes.WebServices.AguardarConsultaRet = 0
+    Configuracoes.WebServices.QuebradeLinha = '|'
+    Configuracoes.Certificados.VerificarValidade = False
+    Configuracoes.RespTec.IdCSRT = 0
+    Left = 544
+    Top = 72
+  end
+  object qruf: TZReadOnlyQuery
+    Connection = db0
+    Params = <>
+    Left = 552
+    Top = 128
+  end
+  object qrnf: TZReadOnlyQuery
+    Connection = db0
+    Params = <>
+    Left = 552
+    Top = 184
+  end
+  object Timer1: TTimer
+    OnTimer = Timer1Timer
+    Left = 688
+    Top = 24
   end
 end
