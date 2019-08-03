@@ -51,6 +51,7 @@ type
     function validaConfiguracoes(inifilename:string; inifile:TIniFile):boolean;
     procedure executarBusca;
     procedure confirmarOperacoes;
+    function fSys_AppIsRunning(ActivateIt: Boolean): Boolean;
   end;
 
 var
@@ -62,7 +63,10 @@ implementation
 
 procedure TfrPrincipal.Abrir1Click(Sender: TObject);
 begin
-  frPrincipal.ShowModal;
+  if fSys_AppIsRunning(true) then
+    application.BringToFront;
+  else
+    frPrincipal.ShowModal;
 end;
 
 procedure TfrPrincipal.Button1Click(Sender: TObject);
@@ -103,17 +107,17 @@ end;
 
 procedure TfrPrincipal.DataSource1DataChange(Sender: TObject; Field: TField);
 begin
-  if qrnf.FieldByName('tp_evento').AsString = 'NF COMPLETO' then
-    Button1.Enabled := false
-  else
-    Button1.Enabled := true;
+//  if qrnf.FieldByName('baixado').Asinteger = 0 then
+//    Button1.Enabled := false
+//  else
+//    Button1.Enabled := true;
 
 end;
 
 procedure TfrPrincipal.executarBusca;
 var
   i, qtdoc:integer;
-  tpevento : string;
+  snbaixado : integer;
 begin
 
     TrayIcon1.BalloonTitle := 'MONITOR DFE';
@@ -161,7 +165,7 @@ begin
         add('id integer(11) auto_increment,');
         add('nr_doc varchar(9),');
         add('nr_modelo char(2),');
-        add('tp_evento varchar(200),');
+        add('sn_baixado tinyint(1),');
         add('nr_cpfcnpj varchar(14),');
         add('nm_forn varchar(255),');
         add('dt_emis datetime,');
@@ -172,6 +176,7 @@ begin
         add('primary key(id)');
         add(');')
       end;
+//      inputbox('','',script.Text);
       execute;
     end;
 
@@ -179,29 +184,22 @@ begin
 
 
     z1.Script.Clear;
-    qtdoc := 0;
 
     for I := 0 to ACBrNFe1.WebServices.DistribuicaoDFe.retDistDFeInt.docZip.Count - 1 do begin
 
-      tpevento := '';
+      snbaixado := -1;
 
       if(ACBrNFe1.WebServices.DistribuicaoDFe.retDistDFeInt.docZip.Items[i].schema = schresNFe)then
-        tpevento := 'RESUMO NFE'
-      else if (ACBrNFe1.WebServices.DistribuicaoDFe.retDistDFeInt.docZip.Items[i].schema = schresEvento) then
-        tpevento := 'RESUMO EVENTO'
-      else if (ACBrNFe1.WebServices.DistribuicaoDFe.retDistDFeInt.docZip.Items[i].schema = schprocNFe) then
-        tpevento := 'NF COMPLETO'
-      else
-        tpevento := 'EVENTO COMPLETO';
+        snbaixado := 0;
 
-      if (tpevento = 'RESUMO NFE') then
-        qtdoc := qtdoc + 1;
+      if (ACBrNFe1.WebServices.DistribuicaoDFe.retDistDFeInt.docZip.Items[i].schema = schprocNFe) then
+        snbaixado := 1;
 
 
-      if ((tpevento = 'RESUMO NFE') or (tpevento = 'NF COMPLETO')) then begin
+      if ((snbaixado = 0) or (snbaixado = 1))then begin
 
         z1.Script.Add('insert into tmpdist set');
-        z1.Script.Add('tp_evento = "'+tpevento+'",');
+        z1.Script.Add('sn_baixado = "'+inttostr(snbaixado)+'",');
         z1.Script.Add('nr_doc = "'+copy(ACBrNFe1.WebServices.DistribuicaoDFe.retDistDFeInt.docZip.Items[i].resDFe.chDFe,26,9)+'",');
         z1.Script.Add('nr_modelo = "'+copy(ACBrNFe1.WebServices.DistribuicaoDFe.retDistDFeInt.docZip.Items[i].resDFe.chDFe,21,2)+'",');
         z1.Script.Add('nr_cpfcnpj = "'+ACBrNFe1.WebServices.DistribuicaoDFe.retDistDFeInt.docZip.Items[i].resDFe.CNPJCPF+'",');
@@ -211,15 +209,10 @@ begin
         z1.Script.Add('vl_nf  = "'+fmtPontoDecimal(Arredonda(ACBrNFe1.WebServices.DistribuicaoDFe.retDistDFeInt.docZip.Items[i].resDFe.vNF,2))+'",');
         z1.Script.Add('nr_protocolo = "'+ACBrNFe1.WebServices.DistribuicaoDFe.retDistDFeInt.docZip.Items[i].resDFe.nProt+'",');
         z1.Script.Add('nr_nsu = "'+ACBrNFe1.WebServices.DistribuicaoDFe.retDistDFeInt.docZip.Items[i].NSU+'";');
-
       end;
     end;
+//    inputbox('','',z1.Script.Text);
     z1.Execute;
-
-    TrayIcon1.BalloonTitle := 'MONITOR DFE';
-    TrayIcon1.BalloonFlags := bfInfo;
-    TrayIcon1.BalloonHint  := inttostr(qtdoc)+' DOCUMENTOS DISPONIVEIS PARA DOWNLOAD';
-    TrayIcon1.ShowBalloonHint;
 
     with qrnf do begin
       close;
@@ -229,8 +222,9 @@ begin
           add('tmpdist.nr_doc,');
           add('tmpdist.nr_modelo,');
           add('tmpdist.dt_emis,');
-          add('tmpdist.tp_evento,');
+          add('sum(tmpdist.sn_baixado) as baixado,');
           add('forn.cd_forn,');
+          add('tmpdist.nr_cpfcnpj,');
           add('ifnull(forn.nm_forn,tmpdist.nr_cpfcnpj) as nm_forn,');
           add('tmpdist.nr_chave,');
           add('tmpdist.vl_nf,');
@@ -238,10 +232,18 @@ begin
           add('tmpdist.nr_nsu');
           add('from tmpdist');
           add('left join forn on forn.nr_cgc = tmpdist.nr_cpfcnpj');
+          add('group by tmpdist.nr_doc, tmpdist.nr_cpfcnpj');
+          add('having baixado = 0');
           add('order by tmpdist.dt_emis');
         end;
+//        inputbox('','',qrnf.SQL.Text);
       open;
     end;
+
+    TrayIcon1.BalloonTitle := 'MONITOR DFE';
+    TrayIcon1.BalloonFlags := bfInfo;
+    TrayIcon1.BalloonHint  := inttostr(qrnf.RecordCount)+' DOCUMENTOS DISPONIVEIS PARA DOWNLOAD';
+    TrayIcon1.ShowBalloonHint;
 
 end;
 
@@ -314,7 +316,10 @@ end;
 
 procedure TfrPrincipal.TrayIcon1Click(Sender: TObject);
 begin
-  frPrincipal.ShowModal;
+  if fSys_AppIsRunning(true) then
+    application.BringToFront;
+  else
+    frPrincipal.ShowModal;
 end;
 
 function TfrPrincipal.validaConfiguracoes(inifilename: string;
@@ -351,6 +356,34 @@ begin
 
   inifile.Free;
 
+end;
+function TfrPrincipal.fSys_AppIsRunning(ActivateIt: Boolean): Boolean;
+var
+  hSem: THandle;
+  hWndMe: HWnd;
+  AppTitle: string;
+begin
+
+  result := false;
+  AppTitle := application.Title;
+  hSem := CreateSemaphore(nil, 0, 1, PChar(AppTitle));
+  if ((hSem <> 0) AND (GetLastError() = ERROR_ALREADY_EXISTS)) then
+  begin
+    CloseHandle(hSem);
+    result := true;
+  end;
+  if result and ActivateIt then
+  begin
+    application.Title := 'Sistema Já Aberto !!! Click OK para Fechar';
+    hWndMe := FindWindow(nil, PChar(AppTitle));
+    if (hWndMe <> 0) then
+    begin
+      if IsIconic(hWndMe) then
+        ShowWindow(hWndMe, SW_SHOWNORMAL)
+      else
+        SetForegroundWindow(hWndMe);
+    end;
+  end;
 end;
 
 end.

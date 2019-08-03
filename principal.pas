@@ -51,6 +51,7 @@ type
     function validaConfiguracoes(inifilename:string; inifile:TIniFile):boolean;
     procedure executarBusca;
     procedure confirmarOperacoes;
+    function fSys_AppIsRunning(ActivateIt: Boolean): Boolean;
   end;
 
 var
@@ -62,7 +63,10 @@ implementation
 
 procedure TfrPrincipal.Abrir1Click(Sender: TObject);
 begin
-  frPrincipal.ShowModal;
+  if fSys_AppIsRunning(true) then
+    application.BringToFront
+  else
+    frPrincipal.ShowModal;
 end;
 
 procedure TfrPrincipal.Button1Click(Sender: TObject);
@@ -95,7 +99,7 @@ begin
   ACBrNFe1.EnviarEvento(0);
 
   if ACBrNFe1.WebServices.EnvEvento.EventoRetorno.retEvento.Items[0].RetInfEvento.cStat = 135 then begin
-    showmessage('operacao confirmada');
+    Timer1Timer(Timer1);
   end;
 
 
@@ -312,7 +316,10 @@ end;
 
 procedure TfrPrincipal.TrayIcon1Click(Sender: TObject);
 begin
-  frPrincipal.ShowModal;
+  if fSys_AppIsRunning(true) then
+    application.BringToFront
+  else
+    frPrincipal.ShowModal;
 end;
 
 function TfrPrincipal.validaConfiguracoes(inifilename: string;
@@ -349,6 +356,34 @@ begin
 
   inifile.Free;
 
+end;
+function TfrPrincipal.fSys_AppIsRunning(ActivateIt: Boolean): Boolean;
+var
+  hSem: THandle;
+  hWndMe: HWnd;
+  AppTitle: string;
+begin
+
+  result := false;
+  AppTitle := application.Title;
+  hSem := CreateSemaphore(nil, 0, 1, PChar(AppTitle));
+  if ((hSem <> 0) AND (GetLastError() = ERROR_ALREADY_EXISTS)) then
+  begin
+    CloseHandle(hSem);
+    result := true;
+  end;
+  if result and ActivateIt then
+  begin
+    application.Title := 'Sistema Já Aberto !!! Click OK para Fechar';
+    hWndMe := FindWindow(nil, PChar(AppTitle));
+    if (hWndMe <> 0) then
+    begin
+      if IsIconic(hWndMe) then
+        ShowWindow(hWndMe, SW_SHOWNORMAL)
+      else
+        SetForegroundWindow(hWndMe);
+    end;
+  end;
 end;
 
 end.
